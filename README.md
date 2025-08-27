@@ -50,6 +50,7 @@ Jarvis/
 │── main.py          # Main assistant program
 │── client.py        # Simple GPT-3.5 test script
 │── musicLibrary.py  # Song library
+│── popularweb.py    # web library
 │── requirements.txt # Dependencies
 │── README.md        # Documentation
 ```
