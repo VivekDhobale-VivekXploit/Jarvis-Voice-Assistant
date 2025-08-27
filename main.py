@@ -1,12 +1,16 @@
+import random
 import speech_recognition as sr
 import webbrowser
 import pyttsx3
-import musicLibrary
+from musicLibrary import music
 import requests
 from openai import OpenAI
 from gtts import gTTS
 import pygame
 import os
+from popularweb import websites
+
+
 
 # -------------------------------
 # Replace with your own API keys
@@ -50,29 +54,59 @@ def aiProcess(command):
     )
     return completion.choices[0].message.content
 
+
+
+
+def play(song_name):
+    if song_name in music:
+        speak(f"Playing {song_name}")
+        webbrowser.open(music[song_name])
+    else:
+        speak("Song not found in library.")
+
+def play_random(category="all"):
+    hindi_keys = [k for k in music if not "phonk" in k and k not in ["stealth", "march", "skyfall", "wolf"]]
+    phonk_keys = [k for k in music if "phonk" in k or k in ["matuska", "bana_passo", "motango_tomada"]]
+    
+    if category == "hindi":
+        song = random.choice(hindi_keys)
+    elif category == "phonk":
+        song = random.choice(phonk_keys)
+    else:
+        song = random.choice(list(music.keys()))
+    
+    play(song)
+
 # -------------------------------
 # Function: Process user commands
 # -------------------------------
 def processCommand(c):
     c = c.lower()
 
-    if "open google" in c:
-        webbrowser.open("https://google.com")
-    elif "open facebook" in c:
-        webbrowser.open("https://facebook.com")
-    elif "open youtube" in c:
-        webbrowser.open("https://youtube.com")
-    elif "open linkedin" in c:
-        webbrowser.open("https://linkedin.com")
-
-    elif c.startswith("play"):
-        song = c.split(" ")[1]
-        if song in musicLibrary.music:
-            link = musicLibrary.music[song]
-            webbrowser.open(link)
+    # Open website command
+    if c.startswith("open "):
+        site = c.replace("open ", "").strip()
+        if site in websites:
+            speak(f"Opening {site}")
+            webbrowser.open(websites[site])
         else:
-            speak("Song not found in library.")
+            speak(f"Sorry, I don't know the website '{site}' yet.")
+        return
 
+    # Play specific song
+    elif c.startswith("play "):
+        song = c.split(" ", 1)[1]
+        if song.startswith("random hindi"):
+            play_random("hindi")
+        elif song.startswith("random phonk"):
+            play_random("phonk")
+        elif song.startswith("random"):
+            play_random("all")
+        else:
+            play(song)
+        return
+
+    # Get latest news
     elif "news" in c:
         r = requests.get(f"https://newsapi.org/v2/top-headlines?country=in&apiKey={NEWS_API_KEY}")
         if r.status_code == 200:
@@ -81,7 +115,9 @@ def processCommand(c):
                 speak(article['title'])
         else:
             speak("Unable to fetch news.")
+        return
 
+    # AI-generated response for unknown commands
     else:
         output = aiProcess(c)
         speak(output)
@@ -96,7 +132,7 @@ if __name__ == "__main__":
         try:
             with sr.Microphone() as source:
                 print("Listening for wake word...")
-                audio = r.listen(source, timeout=2, phrase_time_limit=1)
+                audio = r.listen(source, timeout=3, phrase_time_limit=1)
 
             word = r.recognize_google(audio)
             if word.lower() == "jarvis":
@@ -109,3 +145,4 @@ if __name__ == "__main__":
 
         except Exception as e:
             print("Error:", e)
+
