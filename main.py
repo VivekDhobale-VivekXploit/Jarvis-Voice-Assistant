@@ -54,8 +54,9 @@ def aiProcess(command):
     )
     return completion.choices[0].message.content
 
-
-
+# -------------------------------
+# Function: Process Music
+# -------------------------------
 
 def play(song_name):
     if song_name in music:
